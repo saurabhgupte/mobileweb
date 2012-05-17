@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>news lab</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+
+        </style>
+        <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>       
+        <script>
+	YUI().use('node', 'substitute', 'yql', function (Y) {
+		Y.YQL(
+			"select * from rss where url='http://rss.news.yahoo.com/rss/topstories'", 
+			function (response) {
+				var items = response.query.results.item,
+				i,
+				item,
+				imgTemplate = Y.one('#template-img').getContent(),
+				articleTemplate = Y.one('#template-article').getContent();
+				
+				console.log(items);
+				
+				for (i = 0; i < items.length; i += 1) {
+					item = items[i];
+					
+					if (item.content) {
+						item.img = Y.substitute(imgTemplate, item.content);
+					} else {
+						item.img = '';
+					}
+					item.pubDate = (new Date(item.pubDate)).toLocaleString();
+					Y.one('#news').append(Y.substitute(articleTemplate, item));
+				}
+			}
+		);
+	});
+        </script>
+	
+	<script type="template" id="template-article">
+		<article>
+			<header>
+				{img}
+				<hgroup>
+					<h1>{title}</h1>
+					<h2>{pubDate}, {source}</h2>
+				</hgroup>
+			</header>
+			<section>
+				<p>{description}</p>
+			</section>
+		</article>
+	</script>
+	
+	<script type="mobilewebdev" id="template-img">
+		<img src="{url}" />
+	</script>
+	
+	<style type="text/css">
+	
+	html, body {
+		margin: 0;
+		padding: 0;
+		background-color: #ddd;
+	}
+	
+	article {
+		width: 75%;
+		margin: 0 auto 2em auto;
+		background-color: #fff;
+		padding: 1em;
+		border-radius: 0.5em;
+		box-shadow: 0.2em 0.2em 0.2em purple;
+		overflow: auto;
+	}
+	
+	header > img {
+		display: none;
+	}
+	
+	hgroup h1, hgroup h2 {
+		margin: 0;
+	}
+	
+	hgroup h2 {
+		color: #aaa;
+		font-size: 0.8em;
+	}
+
+	@media screen and (max-width: 768px) {
+		article > section {
+			display: none;
+		}
+		
+		header > img {
+			display: inline;
+			float: left;
+		}
+		
+		header > hgroup {
+			float: left;
+		}
+	}
+	
+	@media screen and (min-width: 1024px) {
+		
+		article {
+			float: left;
+			width: 45%;
+			height: 200px;
+			margin: 0 1% 10px 1%;
+		}
+		
+		/*
+		#news {
+			-webkit-column-count: 2;
+			-webkit-column-gap: 1em;
+			-webkit-column-rule: 1px dashed black;
+		}
+		*/
+	}
+	</style>
+    </head>
+    <body>
+        <section>
+            <h1>Today's Headlines</h1>
+            <div id="news">
+                <!-- populate with articles. -->
+            </div>
+        </section>
+    </body>
+</html>

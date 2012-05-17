@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>input</title>
+        <meta name="viewport" content="width=device-width">
+        <style>
+body {
+    font-size: 1.5em;
+}
+
+input[type="submit"] {
+	-webkit-appearance: none;
+}
+        </style>
+    </head>
+    <body>
+        <h1>user input</h1>
+
+	<label for="name">Name: </label>
+	<input type="text" id="name" placeholder="enter name here" />
+	<br />
+	
+	<label>Name (better input):</label>
+	<input type="text" autocorrect="off" autocomplete="off" autocapitalize="off" placeholder="easier input" />
+	<br />
+	
+	<label>Numbers before iOS 5</label>
+	<input type="number" placeholder="1000">
+	<br />
+	
+	<label>iOS 5 friendly numbers</label>
+	<input type="text" pattern="[0-9]*" placeholder="1000">
+	<br />
+	
+	<input type="tel" />
+	<br />
+	
+	<input type="email" placeholder="me@world.com" />
+	<br />
+	
+	<input type="url" placeholder="http://example.com" />
+	<br />
+	
+	<input type="date" />
+	<br />
+	
+	<a href="tel:1234567890">Call Me</a>
+	<br />
+	
+	<a href="sms:1234567890">Text Me</a>
+	<br />
+	
+	<a href="mailto:me@world.com?subject=Hi">Email Me</a>
+	<br />
+	
+	I am not at <span>+1-123-456-7890</span>, but perhaps not at 123-456-7890.
+	
+	<!---->
+	
+	<input type="submit">
+    </body>
+</html>

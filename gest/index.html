@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html manifest="gest.appcache">
+    <head>
+        <title>gestures</title>
+	<meta name="viewport" content="width=device-width">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<link rel="apple-touch-icon" sizes="114x114" href="icons/touch-icon-iphone4.png" />
+	<link rel="apple-touch-icon" sizes="72x72" href="icons/touch-icon-ipad.png" />
+	<link rel="apple-touch-icon" href="icons/touch-iphone.png">
+	
+	        <link rel="apple-touch-startup-image" 
+	            href="img/startup-ipad-landscape.png" 
+	            media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape)" />
+	        <link rel="apple-touch-startup-image" 
+	            href="img/startup-ipad-portrait.png" 
+	            media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait)" />
+	        <link rel="apple-touch-startup-image" 
+	            href="img/startup-iphone.png"
+	            media="screen and (min-device-width: 200px) and (max-device-width: 320) and (orientation:portrait)" />
+	        <link rel="apple-touch-startup-image" 
+	            href="img/startup-iphone.png" />
+	
+	
+	
+        <style>
+	body, html {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+	
+	#lock {
+		display: block;
+		height: 240px;
+		width: 240px;
+		background-image: url('img/lock.jpg');
+		background-repeat: no-repeat;
+		position: relative;
+		top: 50%;
+		margin: -120px auto 0 auto;
+	}
+        </style>
+        <script>
+	window.onload = function () {
+		var body = document.body,
+		lock = document.querySelector('#lock'),
+		rotation = 0,
+		deltaRotation = 0,
+		scale = 1,
+		deltaScale = 0;
+		
+		body.addEventListener('touchmove', function (e) {
+			e.preventDefault();
+		});
+		
+		body.addEventListener('gesturechange', function (e) {
+			e.preventDefault();
+			
+			deltaRotation = rotation + e.rotation;
+			deltaScale = e.scale - scale;
+			if (scale + deltaScale < -10 || scale + deltaScale > 10) {
+				lock.style.webkitTransform = 'rotate(' + deltaRotation + 'deg) scale(' + scale + ')';
+			} else {
+				lock.style.webkitTransform = 'rotate(' + deltaRotation + 'deg) scale(' + e.scale + ')';
+			}
+		});
+		
+		body.addEventListener('gestureend', function (e) {
+			rotation = deltaRotation;
+			console.log('scale = ' + scale + ' | deltaScale = ' + deltaScale);
+			if (scale + deltaScale > -10 && scale + deltaScale < 10) {
+				scale += deltaScale;
+			}
+		});
+	};
+        </script>
+    </head>
+    <body>
+        <div id="lock">
+        </div>
+    </body>
+</html>

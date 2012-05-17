@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>mosaic</title>
+        <meta name="viewport" content="width=device-width"/>
+        <style>
+body, html {
+    margin: 0;
+    padding: 0;
+    
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: sans-serif;
+}
+#canvas {
+    border: 1px solid black;    
+}
+
+#user-input input[type='button'] {
+    width: 20%;
+    
+    font-weight: bold;
+    
+    color: white;
+    
+    border-radius: 0.5em;
+    background-color: #d861c9;
+    background-image: -moz-linear-gradient(bottom, #730066 12%, #D861C8 56%);
+    background-image: -webkit-linear-gradient(bottom, #730066 12%, #D861C8 56%);
+
+    -webkit-appearance:none;
+}
+#user-input input[type='button'][disabled] {
+    background-image: none;
+    background-color: #aaa;
+    color: #ddd;
+}
+
+#notifications {
+    position: fixed;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    
+    z-index: 1;
+    
+    padding: 5px 10px;
+
+    background-color: #bfbf00;
+    color: black;
+    border-bottom: 1px solid #ccc;
+
+    font-size: 1.5em;
+}
+
+
+
+@media screen and (min-width: 767px) {
+
+#user-input input[type='button'] {
+    height: 4em;
+}
+
+}
+        </style>
+        <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>       
+        <script>
+window.onload = function() {
+YUI().use("node", "event", "event-touch", 'jsonp', function(Y) {
+
+    var Point = function(e, el) {
+        var colorChoices = [
+            {"red": 251, "green": 0, "blue": 13},
+            {"red": 255, "green": 111, "blue": 0},
+            {"red": 201, "green": 0, "blue": 122},
+        ];
+        var colorIndex = Math.floor(Math.random() * colorChoices.length);
+
+        this.x = e.pageX - el.getX();
+        this.y = e.pageY - el.getY();
+        
+        this.radius = 40;
+        
+        this.red = colorChoices[colorIndex].red;
+        this.green = colorChoices[colorIndex].green;
+        this.blue = colorChoices[colorIndex].blue;
+    };
+    
+    var CanvasView = function(selector) {
+        var el = Y.one(selector),
+            ctx = el.getDOMNode().getContext('2d'),
+            points = [],
+            label = "";
+            
+        this.el = el;
+
+        this.resize = function() {
+            var userInput = Y.one("#user-input");
+            var ww = window.innerWidth;
+            var wh = window.innerHeight;
+            var w = el.getAttribute("width");
+            var h = el.getAttribute("height") - userInput.get("clientHeight");
+    
+            if((w != ww) || (h != wh)) {
+                el.setAttribute("width", ww);
+                el.setAttribute("height", wh);
+            }     
+            
+            this.draw();
+        };
+        
+        var drawPoint = function(p) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI, true);
+            ctx.fillStyle = "rgba("+p.red+","+p.green+","+p.blue+","+0.2+")";
+            ctx.fill();
+    
+            ctx.lineWidth = 2.0;
+            ctx.strokeStyle = "rgba("+p.red+","+p.green+","+p.blue+","+0.8+")";
+            ctx.stroke();
+        };
+        
+        var drawLabel = function() {
+            var height = el.getAttribute("height") - 80;
+            ctx.font = "20px sans-serif";
+            ctx.fillStyle = "#000000";
+            ctx.fillText(label, 10, height);
+        };
+        
+        this.draw = function() {
+            this.clear();
+            
+            for (var i = 0; i < points.length; i++) {
+                drawPoint(points[i]);
+            }
+            
+            if (label) {
+                drawLabel();
+            }
+        };
+        
+        this.clear = function() {
+            ctx.clearRect(0, 0, el.getAttribute("width"), 
+                el.getAttribute("height"));
+        };
+        
+        this.clearPoints = function() {
+            points = [];
+        };
+        
+        this.addPoint = function(e) {
+            var p = new Point(e, el);
+            points.push(p);
+        };
+        
+        this.addLabel = function(l) {
+            label = l;
+        };
+        this.clearLabel = function() {
+            label = "";
+        };
+        this.objectify = function() {
+            var data = {
+                "label": label || "",
+                "points": points
+            };
+            return data;
+        };
+        this.deobjectify = function(data) {
+            points = data.points || [];
+            label = data.label || "N/A";
+        };
+    };
+
+    var NotificationsView = function(selector) {
+        var el = Y.one(selector),
+            messageQueue = [],
+            displayFor = 1000,
+            timeoutId;
+        
+        var nextMessage = function() {
+            timeoutId = null;
+            el.hide();
+            display();
+        };
+        
+        var display = function() {
+            if (messageQueue.length && !timeoutId) {
+                el.show();
+                el.setContent(messageQueue.shift());
+                timeoutId = setTimeout(nextMessage, displayFor);
+            }
+        };
+        
+        this.add = function(message) {
+            messageQueue.push(message);
+            display();
+        };
+    };
+
+    var LocationController = function() {
+        var canGeoLocate = (navigator && navigator.geolocation) ? true : false;
+        var defaultBadAddress = "No Address";
+
+        this.find = function(callback) {
+            if (canGeoLocate) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        Y.jsonp(
+                            "http://whatswacky.com/whereami.php?callback={callback}"+
+                            "&lat="+position.coords.latitude+"&lon="+position.coords.longitude, 
+                            function(data) {
+                                var addr = data.placeFinderResults.ResultSet.Results[0];
+                                callback(addr.line1 + " " + addr.line2);
+                            }
+                        );
+                    },
+                    function(err) {
+                        console.log("geocoding error, code: " + err.code);
+                        callback(defaultBadAddress);
+                    }
+                );
+            }
+            else {
+                callback(defaultBadAddress);
+            }
+        };
+
+    };
+
+    var GalleryController = function() {
+        var data = [];
+        var index = 0;
+        var baseURL = "http://whatswacky.com/mosaic_gallery.php?callback={callback}";
+        
+        this.save = function(callback, data) {
+            var url = baseURL + "&save=" + data;
+            Y.jsonp(
+                url,
+                function(json) {
+                    callback();
+                }
+            );
+        };
+        
+        this.load = function(callback) {
+            var url = baseURL + "&get=1";
+            Y.jsonp(
+                url,
+                function(json) {
+                    data = json;
+                    index = 0;
+                    callback();
+                }
+            );
+        };
+        
+        this.length = function() {
+            return data.length;
+        };
+        
+        this.first = function() {
+            index = 0;
+            return data[index];
+        };
+        
+        this.next = function() {
+            if (index < data.length-1) {
+                index += 1;
+            }
+            return data[index];
+        };
+        
+        this.previous = function() {
+            if (index > 0) {
+                index -= 1;
+            }
+            return data[index];
+        };
+    };
+    
+    
+    var CanvasStateManager = function(notify, canvas, loc, gallery) {
+        var currentState = "";
+        var stateEventHandles = [];
+        
+        var clearStateEventHandles = function() {
+            for (var i = 0; i < stateEventHandles.length; i++) {
+                stateEventHandles[i].detach();
+            }
+            stateEventHandles = [];
+        };
+        
+        this.changeState = function(state) {
+            if (currentState != state && this[state+"Enter"]) {
+                currentState = state;
+                this[state+"Enter"]();
+            }
+        };
+        
+        this.drawEnter = function() {
+            var self = this;
+            
+            clearStateEventHandles();
+            
+            notify.add("Drawing mode.");
+            
+            canvas.clearPoints();
+            canvas.clearLabel();
+            canvas.clear();
+            
+            Y.one("#previous-drawing").setAttribute("disabled");
+            Y.one("#gallery").removeAttribute("disabled");
+            Y.one("#draw").setAttribute("disabled");
+            Y.one("#save").removeAttribute("disabled");
+            Y.one("#next-drawing").setAttribute("disabled");
+            
+            stateEventHandles.push(canvas.el.on('click', function(e) {
+                canvas.addPoint(e);
+                canvas.draw();
+            }));
+            
+            stateEventHandles.push(Y.one("#save").on("click", function() {
+                self.changeState("saveDrawing");
+            }));
+            
+            stateEventHandles.push(Y.one("#gallery").on("click", function() {
+                self.changeState("viewGallery");
+            }));
+        };
+        
+        this.saveDrawingEnter = function() {
+            var self = this;
+            var drawingData = canvas.objectify();
+
+            notify.add("Saving...");
+
+            clearStateEventHandles();
+            Y.one("#user-input").all("*").setAttribute("disabled")
+            
+            loc.find(function(addr) {
+                drawingData.label = addr;
+                
+                gallery.save(function() {
+                    notify.add("Saved. Back to drawing mode.");
+                    self.changeState("draw");
+                }, JSON.stringify(drawingData));
+            });
+        };
+        
+        this.viewGalleryEnter = function() {
+            var self = this;
+            
+            notify.add("Loading gallery...");
+
+            clearStateEventHandles();
+
+            Y.one("#user-input").all("*").setAttribute("disabled");
+            stateEventHandles.push(Y.one("#previous-drawing").on('click', function(e) {
+                var img = gallery.previous();
+                canvas.deobjectify(img);
+                canvas.draw();
+            }));
+            stateEventHandles.push(Y.one("#next-drawing").on('click', function(e) {
+                var img = gallery.next();
+                canvas.deobjectify(img);
+                canvas.draw();
+            }));
+            stateEventHandles.push(Y.one("#draw").on('click', function(e) {
+                self.changeState("draw");
+            }));
+
+            gallery.load(function() {
+                if (gallery.length() > 0) {
+                    var img = gallery.first();                    
+                    canvas.deobjectify(img);
+                    canvas.draw();
+
+                    notify.add("Gallery view mode.");
+                    Y.one("#previous-drawing").removeAttribute("disabled");
+                    Y.one("#draw").removeAttribute("disabled");
+                    Y.one("#next-drawing").removeAttribute("disabled");                    
+                }
+                else {
+                    notify.add("Nothing in the gallery, yet. Back to draw mode.");
+                    self.changeState("draw");
+                }
+            });
+        };
+    };
+
+    window.canvas = new CanvasView('#canvas');
+    var notificationsView = new NotificationsView("#notifications");
+    var locationController = new LocationController();
+    var galleryController = new GalleryController();
+    var canvasStateManager = new CanvasStateManager(notificationsView, 
+        canvas, locationController, galleryController);
+
+    canvas.resize();
+
+    canvasStateManager.changeState("draw");
+    
+    Y.one(window).on("orientationchange", function() {
+        canvas.resize();
+    });
+    canvas.el.on('touchmove', function(e) {
+        e.preventDefault();
+    });
+    
+});
+};
+        </script>
+    </head>
+    <body>
+        <div id="notifications" style="display:none;"></div>
+        <form id="user-input" action="javascript:void(0)">
+            <input type="button" id="previous-drawing" value="&lt;&lt;"/><input type="button" id="gallery" value="gallery"/><input type="button" id="draw" value="draw"/><input type="button" id="save" value="save"/><input type="button" id="next-drawing" value="&gt;&gt;"/>
+        </form>
+        <canvas id="canvas" width="300" height="300"></canvas>
+    </body>
+</html>

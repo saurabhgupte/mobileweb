@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hello world!</title>
+        <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
+        <script>
+	YUI().use('node', 'jsonp', function (Y) {
+		var ua = Y.one('#ua');
+		ua.setContent(navigator.userAgent);
+		
+		var uaTranslate = Y.one('#ua-translate');
+		var url = 'http://whatswacky.com/ua.php?callback={callback}';
+		
+		var handleJSONP = function (response) {
+			uaTranslate.setContent(response.uaTranslation);
+		};
+		Y.jsonp(url, handleJSONP);
+	});
+        </script>
+    </head>
+    <body>
+        <h1>Hello world!</h1>
+	<p>User Agent String: <span id="ua"></span></p>
+	<p>Translated: <span id="ua-translate"></span></p>
+    </body>
+</html>

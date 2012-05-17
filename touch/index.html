@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>touches</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+	body, html {
+		margin: 0;
+		padding: 0;
+		height: 100%;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	#canvas {
+		border: 1px solid black;
+	}
+
+	.selected {
+		background-color: #bf9b30;
+	}
+        </style>
+	<script src="http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js"></script>
+	<script>
+	YUI().use('node', 'event', 'event-touch', function (Y) {
+		var red = 50,
+		green = 100,
+		blue = 200,
+		change = -1;
+		
+		var Point = function (e, el) {
+			this.x = e.pageX - el.getX();
+			this.y = e.pageY - el.getY();
+			this.radius = 10;
+			this.red = 50;
+			this.green = 100;
+			this.blue = 200;
+		};
+		
+		var CanvasView = function (selector) {
+			var el = Y.one(selector),
+			ctx = el.getDOMNode().getContext('2d'),
+			points = [];
+			
+			this.el = el;
+			
+			this.resize = function () {
+				var ww = window.innerWidth,
+				wh = window.innerHeight,
+				w = el.getAttribute('width'),
+				h = el.getAttribute('height');
+				
+				if ((w != ww) || (h != wh)) {
+					el.setAttribute('width', ww);
+					el.setAttribute('height', wh);
+				}
+			};
+			
+			var updateRGB = function () {
+				if (blue === 0 || blue === 255) {
+					change *= -1;
+				}
+				
+				red = green = blue = blue += change;
+			};
+			
+			var setColor = function (p) {				
+				p.red = red;
+				p.green = green;
+				p.blue = blue;
+								
+				//updateRGB();
+			};
+			
+			var drawPoint = function (p) {
+				setColor(p);
+				ctx.beginPath();
+				
+				ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI, true);
+				ctx.fillStyle = 'rgba(' + p.red + ', ' + p.green + ', ' + p.blue + ', 0.2)';
+				ctx.fill();
+				
+				ctx.lineWidth = 1.0;
+				ctx.strokeStyle = 'rgba(' + p.red + ', ' + p.green + ', ' + p.blue + ', 0.8)';
+				ctx.stroke();
+			};
+			
+			this.clear = function () {
+				ctx.clearRect(0, 0, el.getAttribute('width'), el.getAttribute('height'));
+			};
+			
+			this.draw = function () {
+				this.clear();
+				
+				for (var i = 0; i < points.length; i += 1) {
+					drawPoint(points[i]);
+				}
+			};
+			
+			this.clearPoints = function () {
+				points = [];
+			};
+			
+			this.addPoint = function (e) {
+				var p = new Point(e, el);
+				points.push(p);
+			};
+		};
+		var canvas = new CanvasView('#canvas');
+		
+		canvas.el.on('touchend', function (e) {
+			//canvas.clearPoints();
+		});
+		
+		canvas.el.on('touchmove', function (e) {
+			e.preventDefault();
+			
+			for (var i = 0; i < e.touches.length; i += 1) {
+				canvas.addPoint(e.touches[i]);
+			}
+		});
+		
+		canvas.el.on('click', function (e) {
+			//canvas.el.toggleClass('selected');
+			
+			//DEBUG
+			//canvas.addPoint(e);
+			canvas.clearPoints();
+		});
+		
+		setInterval(function () {
+			canvas.resize();
+			canvas.draw();
+		}, 50);
+	});
+        </script>
+    </head>
+    <body>
+	<canvas id="canvas" width="300" height="300"></canvas>
+    </body>
+</html>

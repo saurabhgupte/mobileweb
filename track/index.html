@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>location and storage</title>
+	<meta name="viewport" content="width=device-width">
+        <style>
+
+        </style>
+        <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>       
+        <script>
+	YUI().use('node', 'event', 'jsonp', function (Y) {
+		var loc = document.body,
+		breadCrumbs;
+		
+		if (localStorage['breadCrumbs']) {
+			breadCrumbs = JSON.parse(localStorage['breadCrumbs']);
+			loc.innerHTML += 'You have been to: ';
+			loc.innerHTML += breadCrumbs.join('<br/>');
+		} else {
+			breadCrumbs = [];
+		}
+		
+		var reverseGeo = function (position) {
+			Y.jsonp('http://whatswacky.com/whereami.php?callback={callback}&lat=' + position.coords.latitude + 
+			'&lon=' + position.coords.longitude, function (data) {
+				var addr = data.placeFinderResults.ResultSet.Results[0];
+				loc.innerHTML += '<br/> We think you are at: ' + addr.line1 + ' ' + addr.line2;
+				
+				breadCrumbs.unshift(addr.line1 + ' ' + addr.line2);
+			});
+		};
+		
+		window.onunload = function () {
+			localStorage['breadCrumbs'] = JSON.stringify(breadCrumbs);
+		};
+		
+		//if (navigator.getlocation) {
+			navigator.geolocation.getCurrentPosition(function (position) {
+				var template = [
+					'lat:',
+					position.coords.latitude,
+					'lon:',
+					position.coords.longitude,
+					'accuracy:',
+					position.coords.accuracy,
+					'when:',
+					new Date(position.timestamp)
+				];
+				loc.innerHTML += template.join(' ');
+				
+				reverseGeo(position);
+			}, function (err) {
+				//0: unknown error
+				//1: permission denied
+				//2: position unavailable
+				//3: timed out
+				alert('geocoding error, code: ' + err.code);
+			}, {
+				enableHighAccuracy: true,
+				timeout: 3000,
+				maximumAge: 5000
+			});
+		//}
+	});
+        </script>
+    </head>
+    <body>
+
+    </body>
+</html>

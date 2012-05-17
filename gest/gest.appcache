@@ -1,0 +1,15 @@
+CACHE MANIFEST
+# v0
+# files referenced in the appcache are not updated
+# unless the manifest itself is updated
+
+CACHE:
+img/lock.jpg
+img/happy.png
+
+# NETWORK:
+# ANY XMLHttpRequests or dynamic script
+# /api/*
+
+FALLBACK:
+/img/ img/happy.png

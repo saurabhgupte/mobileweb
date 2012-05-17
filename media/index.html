@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>viewports</title>
+	<meta name="viewport" content="width=device-width">
+        <style>
+	body {
+		font-size: 2em;
+	}
+	
+	.container {
+		position: relative;
+	}
+	
+	.card {
+		height: 6em;
+		width: 4em;
+		background-color: white;
+		padding: 0.2em;
+		margin: 0.2em;
+		border: 1px solid black;
+		border-radius: 0.5em;
+		float: left;
+		overflow: auto;
+	}
+	/*
+	@media screen and (min-width: 480px) and (max-width: 959px) {
+		.card {
+			float: none;
+			position: absolute;
+		}
+		
+		.ace {
+			top: 0;
+			left: 0;
+		}
+		
+		.king {
+			top: 1em;
+			left: 1em;
+		}
+		
+		.queen {
+			top: 2em;
+			left: 2em;
+		}
+		
+		.jack {
+			top: 3em;
+			left: 3em;
+		}
+		
+		.nine {
+			top: 4em;
+			left: 4em;
+		}
+	}*/
+        </style>
+	
+	<link href="media.css" media="screen and (max-width: 480px)" rel="stylesheet" />
+	
+        <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>       
+        <script>
+	YUI().use('node', function (Y) {
+		Y.one(window).on('orientationchange', function () {
+			switch (window.orientation) {
+				case 0:
+				//portrait
+				Y.one('body').setStyle('background-color', 'pink');
+				break;
+				
+				case 90:
+				Y.one('body').setStyle('background-color', 'red');
+				break;
+				
+				case -90:
+				Y.one('body').setStyle('background-color', 'cyan');
+				break;
+			}
+		});
+	});
+        </script>
+    </head>
+    <body>
+	<div class="container">
+		<div class="card ace">Ace &spades;</div>
+		<div class="card king">King &spades;</div>
+		<div class="card queen">Queen &spades;</div>
+		<div class="card jack">Jack &spades;</div>
+		<div class="card nine">9 &clubs;</div>
+	</div>
+    </body>
+</html>
